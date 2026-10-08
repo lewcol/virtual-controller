@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+// TCP messages from Client
+message Heartbeat {
+    bytes session_id = 1;
+}
+
+message Hello {
+    string device_name = 1;
+}
+
+message ClientMessage {
+    oneof payload {
+        Hello hello = 1;
+        Heartbeat heartbeat = 2;
+    }
+}
+
+// TCP messages from Server
+message ServerDisconnect {
+    enum Reason {
+        UNKNOWN = 0;
+        KICKED = 1;
+        SERVER_SHUTDOWN = 2;
+        SESSION_TIMEOUT = 3;
+        PROTOCOL_ERROR = 4;
+    }
+
+    Reason reason = 1;
+    string message = 2;
+}
+
+message ServerControllerSwapUpdate {
+    int32 controller_id = 1;
+}
+
+message SessionInfo {
+    bytes session_id = 1;
+    bytes session_token = 2;
+    int32 controller_id = 3;
+    int32 udp_port = 4;
+}
+
+message ServerMessage {
+    oneof payload {
+        SessionInfo session_info = 1;
+        ServerDisconnect disconnect = 2;
+    }
+}
+
+// UDP messages from Client
+message ButtonUpdate {
+    uint32 sequence = 1;
+
+    uint64 left_analog_x = 2;
+    uint64 left_analog_y = 3;
+    uint64 right_analog_x = 4;
+    uint64 right_analog_y = 5;
+
+    bool start_button_pressed = 6;
+    bool select_button_pressed = 7;
+    bool a_button_pressed = 8;
+    bool b_button_pressed = 9;
+    bool x_button_pressed = 10;
+    bool y_button_pressed = 11;
+    bool left_bumper_pressed = 12;
+    bool right_bumper_pressed = 13;
+    bool left_trigger_pressed = 14;
+    bool right_trigger_pressed = 15;
+}
+
+message ClientUpdate {
+    bytes session_id = 1;
+    bytes session_token = 2;
+    ButtonUpdate update = 3;
+}
