@@ -19,14 +19,7 @@ endif()
 find_package(OpenSSL REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost QUIET)
-
-if(Boost_FOUND)
-    set(CONTROLLER_BOOST_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
-else()
-    set(CONTROLLER_BOOST_INCLUDE_DIRS
-        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/boost_1_91_0)
-endif()
+find_package(Boost 1.90 REQUIRED)
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/proto/messages.proto)
@@ -48,7 +41,7 @@ add_executable(controller
 
 target_include_directories(controller PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CONTROLLER_BOOST_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
 )
 
 target_compile_definitions(controller PRIVATE
