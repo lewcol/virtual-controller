@@ -39,6 +39,7 @@ add_executable(controller
     src/DeviceSession.cc
     src/ControllerManager.cc
     src/Controller.cc
+    src/MockController.cc
 )
 
 target_include_directories(controller PRIVATE

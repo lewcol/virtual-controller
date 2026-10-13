@@ -1,11 +1,12 @@
 #include "ControllerManager.h"
+#include "MockController.h"
 #include "messages.pb.h"
 
 ControllerManager::ControllerManager(const std::string& impl)
 {
     for (int i = 0; i < max_controllers_; i++) {
         if (impl == "mock") {
-            // controllers_.emplace_back(std::make_unique<Controller>(i));
+            controllers_.emplace_back(std::make_unique<MockController>(i));
         } else if (impl == "linux") {
             // Create LinuxController instances
         }
