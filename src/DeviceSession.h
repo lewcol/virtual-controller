@@ -17,6 +17,7 @@ using boost::asio::ip::udp;
 using boost::uuids::uuid;
 
 class SessionManager;
+class ClientUpdate;
 
 class DeviceSession
     : public std::enable_shared_from_this<DeviceSession> {
@@ -28,6 +29,7 @@ public:
           negotiation_timer_(socket_.get_executor()) {}
 
     void startNegotiation();
+    bool validateUpdate(const udp::endpoint& sender, const ClientUpdate& message);
     void sendSessionInfo(const uuid& session_id,
                          std::string session_token,
                          std::uint32_t controller_id,
@@ -35,10 +37,8 @@ public:
     bool acceptSequence(std::uint32_t sequence);
     bool acceptUdpEndpoint(const udp::endpoint& endpoint);
     void close();
-    const std::optional<std::string>& getSessionToken() const
-    {
-        return session_token_;
-    }
+    const std::optional<std::string>& getSessionToken() const { return session_token_; }
+    const std::optional<std::uint32_t>& getControllerId() const { return controller_id_; }
 
 private:
     void readHeader();

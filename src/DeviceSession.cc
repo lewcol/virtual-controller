@@ -8,27 +8,27 @@
 
 namespace {
 
-constexpr std::uint32_t max_message_size = 64 * 1024;
+    constexpr std::uint32_t max_message_size = 64 * 1024;
 
-// convert network-order bytes to host-order uint32_t
-std::uint32_t decode_u32_be(const std::array<std::uint8_t, 4>& bytes)
-{
-    return (static_cast<std::uint32_t>(bytes[0]) << 24) |
-           (static_cast<std::uint32_t>(bytes[1]) << 16) |
-           (static_cast<std::uint32_t>(bytes[2]) << 8) |
-           static_cast<std::uint32_t>(bytes[3]);
-}
+    // convert network-order bytes to host-order uint32_t
+    std::uint32_t decode_u32_be(const std::array<std::uint8_t, 4>& bytes)
+    {
+        return (static_cast<std::uint32_t>(bytes[0]) << 24) |
+            (static_cast<std::uint32_t>(bytes[1]) << 16) |
+            (static_cast<std::uint32_t>(bytes[2]) << 8) |
+            static_cast<std::uint32_t>(bytes[3]);
+    }
 
-// convert host-order uint32_t to network-order bytes
-std::array<std::uint8_t, 4> encode_u32_be(std::uint32_t value)
-{
-    return {
-        static_cast<std::uint8_t>(value >> 24),
-        static_cast<std::uint8_t>(value >> 16),
-        static_cast<std::uint8_t>(value >> 8),
-        static_cast<std::uint8_t>(value)
-    };
-}
+    // convert host-order uint32_t to network-order bytes
+    std::array<std::uint8_t, 4> encode_u32_be(std::uint32_t value)
+    {
+        return {
+            static_cast<std::uint8_t>(value >> 24),
+            static_cast<std::uint8_t>(value >> 16),
+            static_cast<std::uint8_t>(value >> 8),
+            static_cast<std::uint8_t>(value)
+        };
+    }
 
 } // namespace
 
@@ -245,6 +245,7 @@ void DeviceSession::close()
     socket_.close(ec);
 }
 
+// If the UDP endpoint is different from the first one received, reject it.
 bool DeviceSession::acceptUdpEndpoint(const udp::endpoint& endpoint)
 {
     if (!udp_endpoint_) {
@@ -253,4 +254,24 @@ bool DeviceSession::acceptUdpEndpoint(const udp::endpoint& endpoint)
     }
 
     return *udp_endpoint_ == endpoint;
+}
+
+// Validate the session token and sequence number
+bool DeviceSession::validateUpdate(const udp::endpoint& sender, const ClientUpdate& message)
+{
+    const auto& session_token = getSessionToken();
+    if (!session_token || message.session_token() != *session_token) {
+        return false;
+    }
+
+    if (!acceptUdpEndpoint(sender)) {
+        return false;
+    }
+
+    const auto& update = message.update();
+    if (!acceptSequence(update.sequence())) {
+        return false;
+    }
+  
+    return true;
 }

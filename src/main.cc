@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
 
     try {
         boost::asio::io_context io_context;
-        Server server(io_context, tcp_port, udp_port);
+        Server server(io_context, tcp_port, udp_port, "mock");
 
         boost::asio::signal_set signals(io_context, SIGINT, SIGTERM);
         signals.async_wait([&](const boost::system::error_code&, int) {

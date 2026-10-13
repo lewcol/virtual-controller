@@ -37,6 +37,8 @@ add_executable(controller
     src/UDPServer.cc
     src/SessionManager.cc
     src/DeviceSession.cc
+    src/ControllerManager.cc
+    src/Controller.cc
 )
 
 target_include_directories(controller PRIVATE

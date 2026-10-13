@@ -3,8 +3,9 @@
 #include <stdexcept>
 #include <openssl/rand.h>
 
-#include "DeviceSession.h"
 #include "SessionManager.h"
+#include "DeviceSession.h"
+#include "ControllerManager.h"
 #include "messages.pb.h"
 
 // Begin DeviceSession negotiation after TCP connection is established
@@ -37,15 +38,18 @@ void SessionManager::registerSession(
         pendingSessions_.erase(pending);
     }
 
+    // Obtain a controller ID for the session
+    int controller_id = controller_manager_.getController();
+
     verifiedSessions_[session_id] = session;
     session->sendSessionInfo(
         session_id,
         session_token,
-        next_controller_id_++,
+        controller_id,
         udp_port_);
 }
 
-// Validate and Authenticate incoming UDP packet, process update
+// Handle incoming UDP messages
 void SessionManager::handleUdpPacket(const udp::endpoint& sender,
                                      const std::byte* data,
                                      std::size_t size)
@@ -70,21 +74,13 @@ void SessionManager::handleUdpPacket(const udp::endpoint& sender,
     }
 
     const auto& session = found->second;
-    const auto& session_token = session->getSessionToken();
-    if (!session_token || message.session_token() != *session_token) {
+    if (!session->validateUpdate(sender, message)) {
         return;
     }
 
-    if (!session->acceptUdpEndpoint(sender)) {
-        return;
-    }
-
-    const auto& update = message.update();
-    if (!session->acceptSequence(update.sequence())) {
-        return;
-    }
-
-    // to-do: implement virtual controller interface and process update
+    // message validated
+    int controller_id = *session->getControllerId();
+    controller_manager_.updateController(controller_id, message.update());
 }
 
 void SessionManager::negotiationTimeout(std::shared_ptr<DeviceSession>& session)
